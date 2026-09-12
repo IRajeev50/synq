@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info: {title: SYNQ API, version: 0.1.0}
+servers: [{url: https://api.staging.synq.example/api/v1}]
+security: [{bearerAuth: []}]
+paths:
+  /health: {get: {security: [], responses: {'200': {description: healthy}}}}
+  /discovery/sessions:
+    post:
+      operationId: startDiscovery
+      responses: {'201': {description: Discovery session created, content: {application/json: {schema: {$ref: '#/components/schemas/DiscoverySession'}}}}, '429': {$ref: '#/components/responses/Problem'}}
+  /discovery/encounters:
+    post:
+      operationId: submitEncounter
+      responses: {'202': {description: Accepted for validation}, '400': {$ref: '#/components/responses/Problem'}}
+  /matches:
+    get:
+      operationId: listMatches
+      responses: {'200': {description: Authorized candidates}}
+  /connections/{candidateId}/request:
+    post:
+      operationId: requestConnection
+      parameters: [{name: candidateId, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses: {'201': {description: Requested}, '409': {$ref: '#/components/responses/Problem'}}
+  /safety/blocks:
+    post: {operationId: blockUser, responses: {'204': {description: Block applied atomically}}}
+  /safety/reports:
+    post: {operationId: reportUser, responses: {'201': {description: Report queued}}}
+components:
+  securitySchemes: {bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}}
+  schemas:
+    DiscoverySession:
+      type: object
+      required: [id, expiresAt, epochToken]
+      properties: {id: {type: string, format: uuid}, expiresAt: {type: string, format: date-time}, epochToken: {type: string}}
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties: {type: {type: string}, title: {type: string}, status: {type: integer}, detail: {type: string}}
+  responses:
+    Problem: {description: Problem, content: {application/problem+json: {schema: {$ref: '#/components/schemas/Problem'}}}}
