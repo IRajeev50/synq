@@ -55,3 +55,21 @@ Redis loss pauses discovery but not accounts/connections. Provider outage preser
 
 ## Cloud map
 AWS: CloudFront/WAF, API Gateway or ALB, ECS Fargate, RDS PostgreSQL, ElastiCache, SQS, S3, KMS, Secrets Manager, CloudWatch/OpenTelemetry, Cognito or another OIDC adapter. Terraform modules keep provider boundaries explicit.
+
+## Build-now playlist, session and licensed-catalogue modules
+
+```mermaid
+flowchart LR
+  PL[Playlist module] --> CM[Canonical music metadata]
+  PL --> NS[Nearby signed reference envelope]
+  SS[Shared Session module] --> PC[PlaybackController capability adapters]
+  SS --> NS
+  LC[Licensed Catalogue module] --> RP[RightsPolicy]
+  RP --> RM[(Rights manifests)]
+  RP --> EC[Encrypted device-bound cache]
+  PC --> SP[Spotify/Apple/deep-link/manual adapters]
+```
+
+`PlaylistService` and `SharedSessionService` are MVP modules and work without any downloadable catalogue. `LicensedCatalogueService` is an optional adapter. Its `RightsPolicy` evaluates recording/composition asset, territory, dates and exact capability (`stream`, `offline_cache`, `session_control`, `p2p_audio`). Missing/expired/ambiguous rights fail closed. Commercial provider adapters never return audio bytes.
+
+Nearby envelopes are typed and size-bounded: `discovery.token`, `playlist.reference`, `session.command`, `session.reaction`. They are encrypted/authenticated, replay-protected and short-lived. Audio transfer is not a message type in the default protocol.
