@@ -6,8 +6,21 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#09070D",
-    "ios": {"supportsTablet": true, "bundleIdentifier": "app.synq.mobile"},
-    "android": {"package": "app.synq.mobile", "adaptiveIcon": {"backgroundColor": "#09070D"}},
-    "web": {"bundler": "metro"}
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.synq.mobile"
+    },
+    "android": {
+      "package": "app.synq.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#09070D"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }
