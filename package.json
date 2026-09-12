@@ -15,5 +15,10 @@
   "engines": {
     "node": ">=20"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "@expo/metro-config": "57.0.12",
+    "@expo/metro": "56.0.2",
+    "metro": "0.84.5"
+  }
 }
