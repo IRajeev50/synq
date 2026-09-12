@@ -1,0 +1,19 @@
+{
+  "name": "synq",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test services/api/test/*.test.js",
+    "start:api": "node services/api/src/server.js",
+    "check": "node --check services/api/src/*.js && node --test services/api/test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module"
+}
