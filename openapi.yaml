@@ -25,6 +25,33 @@ paths:
     post: {operationId: blockUser, responses: {'204': {description: Block applied atomically}}}
   /safety/reports:
     post: {operationId: reportUser, responses: {'201': {description: Report queued}}}
+  /playlists:
+    post: {operationId: createPlaylist, responses: {'201': {description: Playlist created}}}
+  /playlists/{playlistId}/tracks:
+    post:
+      operationId: addPlaylistTrack
+      parameters: [{name: playlistId, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses: {'201': {description: Track reference added}}
+  /playlists/{playlistId}/share:
+    post:
+      operationId: sharePlaylistNearby
+      parameters: [{name: playlistId, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses: {'201': {description: Short-lived signed reference envelope}}
+  /playlists/import:
+    post: {operationId: importPlaylistReference, responses: {'201': {description: Reference verified}}}
+  /sessions:
+    post: {operationId: createSharedSession, responses: {'201': {description: Session countdown created}}}
+  /sessions/{sessionId}/commands:
+    post:
+      operationId: sendSessionCommand
+      parameters: [{name: sessionId, in: path, required: true, schema: {type: string, format: uuid}}]
+      responses: {'201': {description: Sequenced state command}}
+  /catalogue/{assetId}/offline-grant:
+    post:
+      operationId: requestOfflineGrant
+      parameters: [{name: assetId, in: path, required: true, schema: {type: string}}]
+      responses: {'201': {description: Encrypted non-exportable cache grant}, '403': {$ref: '#/components/responses/Problem'}}
+
 components:
   securitySchemes: {bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}}
   schemas:
