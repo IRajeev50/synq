@@ -1,0 +1,12 @@
+import crypto from 'node:crypto';
+const uuid=()=>crypto.randomUUID();
+export class PlaylistSessionService {
+ constructor({now=()=>Date.now(),signingSecret='dev'}={}){this.now=now;this.secret=signingSecret;this.playlists=new Map();this.sessions=new Map();}
+ createPlaylist(ownerId,{name}){const p={id:uuid(),ownerId,name:name.trim().slice(0,80),revision:1,tracks:[],createdAt:this.now()};this.playlists.set(p.id,p);return p;}
+ addTrack(ownerId,playlistId,track){const p=this.playlists.get(playlistId);if(!p||p.ownerId!==ownerId)throw Object.assign(new Error('Forbidden'),{status:403});p.tracks.push({canonicalId:track.canonicalId,title:track.title,artist:track.artist,providerLinks:track.providerLinks||{}});p.revision++;return p;}
+ shareReference(actor,playlistId){const p=this.playlists.get(playlistId);if(!p||p.ownerId!==actor)throw Object.assign(new Error('Forbidden'),{status:403});const payload={v:1,type:'playlist.reference',playlistId:p.id,revision:p.revision,expiresAt:this.now()+10*60_000};const encoded=Buffer.from(JSON.stringify(payload)).toString('base64url');const sig=crypto.createHmac('sha256',this.secret).update(encoded).digest('base64url');return `${encoded}.${sig}`;}
+ importReference(envelope){const [encoded,sig]=envelope.split('.');const expected=crypto.createHmac('sha256',this.secret).update(encoded).digest('base64url');if(!sig||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(expected)))throw new Error('Invalid envelope');const p=JSON.parse(Buffer.from(encoded,'base64url'));if(p.type!=='playlist.reference'||p.expiresAt<this.now())throw new Error('Expired envelope');return p;}
+ createSession(hostId,{connectionId,playlistId,trackIndex=0,startDelayMs=5000}){const session={id:uuid(),hostId,connectionId,playlistId,trackIndex,targetStartAt:this.now()+Math.max(3000,startDelayMs),state:'countdown',seq:0,reactions:[]};this.sessions.set(session.id,session);return session;}
+ command(actor,sessionId,{type}){const s=this.sessions.get(sessionId);if(!s)throw new Error('Session unavailable');if(!['play','pause','leave'].includes(type))throw new Error('Invalid command');s.seq++;s.state=type==='leave'?'ended':type;s.updatedBy=actor;s.updatedAt=this.now();return {sessionId:s.id,type,seq:s.seq,at:s.updatedAt};}
+ react(actor,sessionId,emoji){const s=this.sessions.get(sessionId);if(!s)throw new Error('Session unavailable');const r={id:uuid(),actor,emoji:String(emoji).slice(0,8),at:this.now()};s.reactions.push(r);return r;}
+}
