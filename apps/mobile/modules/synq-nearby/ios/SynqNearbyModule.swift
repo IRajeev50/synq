@@ -14,7 +14,7 @@ public final class SynqNearbyModule: Module, CBCentralManagerDelegate, CBPeriphe
       switch CBManager.authorization { case .allowedAlways: return "granted"; case .denied, .restricted: return "denied"; default: return "undetermined" }
     }
     AsyncFunction("start") { (epochToken: String) in
-      guard epochToken.utf8.count <= 20 else { throw InvalidTokenException() }
+      guard epochToken.utf8.count > 0 && epochToken.utf8.count <= 4 else { throw InvalidTokenException() }
       self.token = epochToken
       self.central = CBCentralManager(delegate: self, queue: nil)
       self.peripheral = CBPeripheralManager(delegate: self, queue: nil)
@@ -24,7 +24,7 @@ public final class SynqNearbyModule: Module, CBCentralManagerDelegate, CBPeriphe
   }
   public func centralManagerDidUpdateState(_ central: CBCentralManager) {
     guard central.state == .poweredOn else { sendEvent("onState", ["state":"bluetooth-unavailable"]); return }
-    central.scanForPeripherals(withServices: [serviceUUID], options: [CBCentralManagerScanOptionAllowDuplicatesKey:false])
+    central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey:false])
   }
   public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String:Any], rssi RSSI: NSNumber) {
     guard let data=advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID:Data], let payload=data[serviceUUID], let observed=String(data:payload,encoding:.utf8), observed != token else { return }
@@ -32,7 +32,7 @@ public final class SynqNearbyModule: Module, CBCentralManagerDelegate, CBPeriphe
   }
   public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
     guard peripheral.state == .poweredOn else { return }
-    peripheral.startAdvertising([CBAdvertisementDataServiceUUIDsKey:[serviceUUID],CBAdvertisementDataServiceDataKey:[serviceUUID:Data(token.utf8)]])
+    peripheral.startAdvertising([CBAdvertisementDataServiceDataKey:[serviceUUID:Data(token.utf8)]])
   }
 }
-private class InvalidTokenException: Exception { override var reason: String { "Epoch token must be at most 20 UTF-8 bytes" } }
+private class InvalidTokenException: Exception { override var reason: String { "Epoch token must be 1 to 4 UTF-8 bytes" } }
