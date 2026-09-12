@@ -2,7 +2,7 @@
   "name": "@synq/mobile",
   "private": true,
   "version": "0.2.0",
-  "main": "App.js",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "start:clear": "expo start --clear",
