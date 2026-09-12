@@ -1,0 +1,22 @@
+import http from 'node:http';
+import {SynqCore} from './core.js';
+const core=new SynqCore({secret:process.env.DISCOVERY_TOKEN_SECRET});
+const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(body));};
+const body=req=>new Promise((ok,no)=>{let d='';req.on('data',c=>{d+=c;if(d.length>1e6)req.destroy();});req.on('end',()=>{try{ok(d?JSON.parse(d):{});}catch(e){no(e);}});});
+const auth=req=>req.headers.authorization?.replace(/^Bearer /,'');
+const server=http.createServer(async(req,res)=>{try{
+ const url=new URL(req.url,'http://localhost'); if(url.pathname==='/api/v1/health') return json(res,200,{status:'ok'});
+ const b=await body(req); let out;
+ if(req.method==='POST'&&url.pathname==='/api/v1/auth/register') out=core.createUser(b);
+ else if(req.method==='POST'&&url.pathname==='/api/v1/music/selection') out=core.selectTrack(auth(req),b);
+ else if(req.method==='POST'&&url.pathname==='/api/v1/discovery/sessions') out=core.startDiscovery(auth(req));
+ else if(req.method==='POST'&&url.pathname==='/api/v1/discovery/encounters') out=core.encounter(auth(req),b);
+ else if(req.method==='POST'&&/^\/api\/v1\/connections\/[^/]+\/request$/.test(url.pathname)) out=core.request(auth(req),url.pathname.split('/')[4]);
+ else if(req.method==='POST'&&/^\/api\/v1\/connections\/[^/]+\/accept$/.test(url.pathname)) out=core.accept(auth(req),url.pathname.split('/')[4]);
+ else if(req.method==='POST'&&url.pathname==='/api/v1/safety/blocks'){core.block(auth(req),b.targetId);return json(res,204,{});}
+ else if(req.method==='POST'&&url.pathname==='/api/v1/safety/reports') out=core.report(auth(req),b);
+ else return json(res,404,{type:'about:blank',title:'Not found',status:404});
+ json(res,req.method==='POST'?201:200,out);
+ }catch(e){json(res,e.status||400,{type:'about:blank',title:e.message,status:e.status||400});}});
+if(import.meta.url===`file://${process.argv[1]}`) server.listen(process.env.PORT||3000,()=>console.log(JSON.stringify({level:'info',event:'server.started',port:process.env.PORT||3000})));
+export {server,core};
