@@ -95,3 +95,20 @@ Guardrails: discovery opt-in, 1/7/30-day retention, repeat discovery, request re
 
 ## Pilot decision
 Run 4 weeks with 150-500 consenting adults and scheduled dense windows. Continue only if the feasibility thresholds are met without rising safety incidents; otherwise test the explanation/density/onboarding assumptions before expanding features.
+
+## Build-now playlist and shared-session scope
+
+The user-approved MVP adds a capability ladder, not a dependency on label partnerships:
+
+1. **Reference playlists now:** users create ordered SYNQ playlists of canonical track metadata and provider links. Nearby exchange sends a signed playlist reference, never commercial audio bytes.
+2. **Shared sessions now:** SYNQ synchronizes an agreed queue item, target start time, countdown, play/pause intent and reactions. Each participant plays through their own entitled provider account or follows a deep link/manual start.
+3. **Encrypted local control now:** nearby transport carries opaque discovery, playlist-reference and session-control envelopes. It does not relay provider audio.
+4. **Licensed downloads when available:** `RightsManifest` gates a small SYNQ-owned catalogue. With no valid manifest, stream/offline/P2P audio actions fail closed while reference playlists and sessions continue normally.
+
+### Acceptance criteria
+
+- A connected user can create a playlist, add normalized tracks, generate a signed nearby share and import that share without exposing listening history.
+- Two connected adults can create/join a session, agree to a queue item, receive a common future start timestamp and exchange reactions.
+- Provider capability UI says `controlled`, `deep-link`, or `manual`; it never reports synchronized audio unless the adapter confirms it.
+- A catalogue asset may be cached offline only when its manifest is current, includes the user's territory and expressly includes `offline_cache`.
+- `p2p_audio` is a separate capability and defaults denied. A general offline licence must not imply P2P redistribution.
