@@ -1,6 +1,10 @@
 import http from 'node:http';
 import {SynqCore} from './core.js';
+import {PlaylistSessionService} from './playlist-session.js';
+import {RightsPolicy,LicensedCatalogue} from './rights-policy.js';
 const core=new SynqCore({secret:process.env.DISCOVERY_TOKEN_SECRET});
+const playlists=new PlaylistSessionService({signingSecret:process.env.DISCOVERY_TOKEN_SECRET});
+const catalogue=new LicensedCatalogue(new RightsPolicy());
 const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(body));};
 const body=req=>new Promise((ok,no)=>{let d='';req.on('data',c=>{d+=c;if(d.length>1e6)req.destroy();});req.on('end',()=>{try{ok(d?JSON.parse(d):{});}catch(e){no(e);}});});
 const auth=req=>req.headers.authorization?.replace(/^Bearer /,'');
@@ -15,8 +19,16 @@ const server=http.createServer(async(req,res)=>{try{
  else if(req.method==='POST'&&/^\/api\/v1\/connections\/[^/]+\/accept$/.test(url.pathname)) out=core.accept(auth(req),url.pathname.split('/')[4]);
  else if(req.method==='POST'&&url.pathname==='/api/v1/safety/blocks'){core.block(auth(req),b.targetId);return json(res,204,{});}
  else if(req.method==='POST'&&url.pathname==='/api/v1/safety/reports') out=core.report(auth(req),b);
+ else if(req.method==='POST'&&url.pathname==='/api/v1/playlists') out=playlists.createPlaylist(auth(req),b);
+ else if(req.method==='POST'&&/^\/api\/v1\/playlists\/[^/]+\/tracks$/.test(url.pathname)) out=playlists.addTrack(auth(req),url.pathname.split('/')[4],b);
+ else if(req.method==='POST'&&/^\/api\/v1\/playlists\/[^/]+\/share$/.test(url.pathname)) out={envelope:playlists.shareReference(auth(req),url.pathname.split('/')[4])};
+ else if(req.method==='POST'&&url.pathname==='/api/v1/playlists/import') out=playlists.importReference(b.envelope);
+ else if(req.method==='POST'&&url.pathname==='/api/v1/sessions') out=playlists.createSession(auth(req),b);
+ else if(req.method==='POST'&&/^\/api\/v1\/sessions\/[^/]+\/commands$/.test(url.pathname)) out=playlists.command(auth(req),url.pathname.split('/')[4],b);
+ else if(req.method==='POST'&&/^\/api\/v1\/sessions\/[^/]+\/reactions$/.test(url.pathname)) out=playlists.react(auth(req),url.pathname.split('/')[4],b.emoji);
+ else if(req.method==='POST'&&/^\/api\/v1\/catalogue\/[^/]+\/offline-grant$/.test(url.pathname)) out=catalogue.offlineGrant(url.pathname.split('/')[4],b.territory);
  else return json(res,404,{type:'about:blank',title:'Not found',status:404});
  json(res,req.method==='POST'?201:200,out);
  }catch(e){json(res,e.status||400,{type:'about:blank',title:e.message,status:e.status||400});}});
 if(import.meta.url===`file://${process.argv[1]}`) server.listen(process.env.PORT||3000,()=>console.log(JSON.stringify({level:'info',event:'server.started',port:process.env.PORT||3000})));
-export {server,core};
+export {server,core,playlists,catalogue};
