@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "SYNQ",
+    "slug": "synq",
+    "version": "0.2.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#09070D",
+    "ios": {"supportsTablet": true, "bundleIdentifier": "app.synq.mobile"},
+    "android": {"package": "app.synq.mobile", "adaptiveIcon": {"backgroundColor": "#09070D"}},
+    "web": {"bundler": "metro"}
+  }
+}
