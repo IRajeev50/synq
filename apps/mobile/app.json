@@ -8,13 +8,22 @@
     "backgroundColor": "#09070D",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.synq.mobile"
+      "bundleIdentifier": "app.synq.mobile",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "SYNQ uses Bluetooth to find nearby people who also turned on Discovery."
+      }
     },
     "android": {
       "package": "app.synq.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#09070D"
-      }
+      },
+      "permissions": [
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_ADVERTISE",
+        "BLUETOOTH_CONNECT",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro"
