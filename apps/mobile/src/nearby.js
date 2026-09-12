@@ -1,3 +1,3 @@
-export class NearbyTransport { async permissionState(){throw new Error('not implemented')} async start(_epochToken){throw new Error('not implemented')} async stop(){} onEncounter(_handler){return()=>{}} }
+let native=null;try{native=require('synq-nearby').SynqNearby}catch{}
+export class NearbyTransport { async permissionState(){return native?native.permissionState():'development-build-required'} async start(epochToken){if(!native)throw new Error('Real BLE requires a SYNQ development build; Expo Go runs local demo mode.');return native.start(epochToken)} async stop(){return native?.stop()} onEncounter(handler){return native?native.onEncounter(handler):{remove(){}}} }
 export class PilotCodeTransport extends NearbyTransport { constructor(code){super();this.code=code} async permissionState(){return 'not-required'} async start(token){return {mode:'pilot-code',code:this.code,token}} }
-// Production development builds inject native CoreBluetooth/Android BLE implementations. Expo Go must never report BLE discovery as active.
